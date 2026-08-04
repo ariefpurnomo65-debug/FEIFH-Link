@@ -24,27 +24,17 @@ WEB/
 2. Klik kanan `index.html` → **Open with Live Server** (atau buka langsung di browser)
 3. Panel admin: buka `admin.html` di browser
 
-### Deploy ke Netlify (Cara Termudah)
-1. Buka https://app.netlify.com/drop
-2. Drag & drop folder `WEB` ke halaman tersebut
-3. Selesai! Website langsung online dengan URL: `https://nama-acak.netlify.app`
+ ### Deploy ke GitHub Pages (Gratis)
+ 1. Buka repository di GitHub (https://github.com/username/FEIFH-Link)
+ 2. Pada halaman repository, pilih **Settings → Pages**
+ 3. Pada bagian **Source**, pilih branch `main` dan folder `/` (root), lalu klik **Save**
+ 4. GitHub Pages akan menghasilkan URL default:
+    ```
+    https://username.github.io/FEIFH-Link/
+    ```
+ 5. Setiap kali Anda melakukan `git push` ke branch `main`, situs akan otomatis ter‑update.
 
-**Atau hubungkan via Git (untuk update otomatis):**
-1. Buat repository di GitHub
-2. Push folder ini ke GitHub:
-   ```bash
-   git init
-   git add .
-   git commit -m "FEIFH Link v1.0"
-   git remote add origin https://github.com/username/feifh-link.git
-   git push -u origin main
-   ```
-3. Buka https://app.netlify.com
-4. Klik **Add new site** → **Import an existing project**
-5. Pilih GitHub → pilih repository `feifh-link`
-6. **Build command:** kosongkan (situs statis)
-7. **Publish directory:** `.`
-8. Klik **Deploy site**
+ **Catatan:** Tidak diperlukan file `netlify.toml` atau konfigurasi build karena situs ini statis.
 
 ### Update Website Setelah Deploy
 Ada 2 cara:
@@ -62,9 +52,9 @@ Ada 2 cara:
 ## 🔐 Panel Admin
 
 ### Akses
-- URL: `admin.html` (atau `/admin` jika sudah deploy ke Netlify)
-- PIN default: `suaran2025`
-- **GANTI PIN** di `admin.js` baris `ADMIN_PIN` sebelum digunakan sungguhan
+ - URL: `admin.html` (akses langsung di GitHub Pages)
+ - PIN default: `suaran2025` (disimpan sebagai hash SHA‑256 di `admin.js`)
+ - **GANTI PIN** dengan mengubah nilai `ADMIN_PIN_HASH` di `admin.js` sebelum produksi
 
 ### Fitur Admin
 - ✅ Dashboard statistik (Total UMKM, Kategori, Buka, Tutup)
