@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#1A8A7E" />
+<title>Admin — FEIFH Link</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+
+<!-- ============================================================
+     SUPABASE JS CLIENT (opsional, hanya dipakai jika admin
+     memilih mode database "Supabase" di panel pengaturan).
+     Dimuat dari CDN resmi Supabase. Jika tidak pakai Supabase,
+     script ini tetap dimuat tapi tidak melakukan apa-apa.
+     ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<!-- ============ BODY: kelas admin-body untuk styling khusus panel admin ============ -->
+<body class="admin-body">
+
+<!-- ============ LOGIN GATE: halaman login sederhana berbasis PIN ============ -->
+<div class="admin-login" id="loginScreen">
+  <div class="admin-login-card">
+    <div class="brand-mark" style="width:40px;height:40px;font-size:1rem;">FL</div>
+    <h1>Panel Admin</h1>
+    <p>Masukkan PIN admin untuk mengelola data UMKM FEIFH Link.</p>
+    <form id="loginForm">
+      <input type="password" id="pinInput" inputmode="numeric" placeholder="••••••" autocomplete="off" />
+      <div class="admin-error" id="loginError"></div>
+      <button type="submit" class="btn btn-primary-solid">Masuk</button>
+    </form>
+    <div class="admin-hint">
+      PIN default: <strong>suaran2025</strong>. Ganti PIN ini di bagian atas
+      <code>admin.js</code> sebelum situs digunakan sungguhan — perlindungan ini
+      hanya untuk mencegah orang iseng, bukan keamanan tingkat produksi.
+    </div>
+    <div class="admin-hint" style="margin-top:10px;">
+      <a href="index.html">← Kembali ke situs utama</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN SHELL: dashboard utama setelah login ============ -->
+<div class="admin-shell" id="adminShell">
+
+  <header class="admin-topbar">
+    <div class="wrap">
+      <a href="#" class="brand"><span class="brand-mark">FL</span> Admin FEIFH Link</a>
+      <div class="admin-topbar-actions">
+        <a href="index.html" target="_blank">Lihat situs ↗</a>
+        <button class="btn-ghost-light" id="logoutBtn">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="wrap">
+
+      <!-- ============================================================
+           DASHBOARD STATISTIK
+           Kartu ringkasan: Total UMKM, Total Kategori, Buka, Tutup.
+           Data dihitung ulang setiap kali tabel di-render (lihat admin.js).
+           ============================================================ -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-icon">🏪</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statTotal">0</span>
+            <span class="stat-label">Total UMKM</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏷️</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statCategories">0</span>
+            <span class="stat-label">Kategori</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🟢</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statOpen">0</span>
+            <span class="stat-label">Sedang Buka</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔴</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statClosed">0</span>
+            <span class="stat-label">Sedang Tutup</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           TOOLBAR: tombol-tombol aksi admin.
+           - Kelola Kategori: ubah/tambah/hapus kategori
+           - Pengaturan Database: pilih localStorage atau Supabase
+           - Pengaturan Banner: atur gambar banner website
+           - Unduh data.js: export data untuk deploy permanen
+           - Tambah UMKM: buka form tambah data baru
+           ============================================================ -->
+      <div class="admin-toolbar">
+        <div>
+          <span class="eyebrow">Kelola data</span>
+          <h2 style="margin-top:6px;">Daftar UMKM</h2>
+          <span class="db-mode-badge" id="dbModeBadge">Mode: localStorage</span>
+        </div>
+        <div class="admin-toolbar-btns">
+          <button class="btn btn-sm btn-outline" id="manageCatBtn">🏷️ Kelola Kategori</button>
+          <button class="btn btn-sm btn-outline" id="textSettingsBtn">📝 Teks Website</button>
+          <button class="btn btn-sm btn-outline" id="bannerSettingsBtn">🖼️ Banner</button>
+          <button class="btn btn-sm btn-outline" id="pengaduanBtn">📬 Pengaduan & Saran</button>
+          <button class="btn btn-sm btn-outline" id="dbSettingsBtn">⚙️ Database</button>
+          <button class="btn btn-sm btn-solid-marigold" id="exportBtn">⬇️ Unduh data.js</button>
+          <button class="btn btn-sm btn-solid-leaf" id="addUmkmBtn">+ Tambah UMKM</button>
+        </div>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Nama Usaha</th>
+              <th>Kategori</th>
+              <th>Alamat</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody"></tbody>
+        </table>
+      </div>
+      <div class="admin-empty" id="adminEmpty" style="display:none;">
+        Belum ada data UMKM. Klik <strong>+ Tambah UMKM</strong> untuk mulai.
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ============================================================
+     FORM MODAL: TAMBAH/EDIT UMKM
+     Form untuk menambah atau mengedit data UMKM.
+     Termasuk field baru: fotoUsaha, fotoProduk, latitude, longitude.
+     ============================================================ -->
+<div class="modal-backdrop form-modal" id="umkmModalBackdrop">
+  <div class="modal">
+    <div class="modal-body">
+      <h2 id="umkmModalTitle">Tambah UMKM</h2>
+      <form id="umkmForm">
+        <input type="hidden" id="umkmId" />
+      <div class="form-grid">
+        <div class="field full">
+          <label for="fNama">Nama Usaha</label>
+          <input type="text" id="fNama" required placeholder="Contoh: Warung Bu Yuni" />
+        </div>
+        <div class="field full">
+          <label for="fKategori">Kategori</label>
+          <select id="fKategori" required></select>
+        </div>
+
+          <div class="field">
+            <label for="fIcon">Ikon/Emoji</label>
+            <input type="text" id="fIcon" placeholder="🍛" maxlength="4" />
+          </div>
+
+          <div class="field full">
+            <label for="fDeskripsi">Deskripsi Singkat</label>
+            <textarea id="fDeskripsi" required placeholder="Jelaskan produk/jasa usaha ini secara singkat"></textarea>
+          </div>
+
+          <div class="field full">
+            <label for="fAlamat">Alamat</label>
+            <input type="text" id="fAlamat" required placeholder="Jl. Suaran Raya No. 1, Kampung Suaran" />
+          </div>
+
+          <div class="field">
+            <label for="fJam">Jam Operasional</label>
+            <input type="text" id="fJam" required placeholder="08.00 – 17.00 WIB" />
+          </div>
+
+          <div class="field">
+            <label for="fWhatsapp">Nomor WhatsApp</label>
+            <input type="text" id="fWhatsapp" required placeholder="62812xxxxxxx (tanpa spasi/strip)" />
+          </div>
+
+          <div class="field full">
+            <label for="fMapsQuery">Kata kunci lokasi Google Maps</label>
+            <input type="text" id="fMapsQuery" required placeholder="Nama usaha + Kampung Suaran" />
+          </div>
+
+          <!-- ============================================================
+               FIELD FOTO USAHA
+               URL gambar dari hosting gratis (ImgBB, PostIMG, dll).
+               Jika kosong, akan pakai emoji icon sebagai fallback.
+               ============================================================ -->
+          <div class="field full">
+            <label for="fFotoUsaha">Foto Usaha (URL gambar)</label>
+            <input type="url" id="fFotoUsaha" placeholder="https://i.ibb.co/xxx/foto-usaha.jpg (opsional)" />
+            <small style="color:var(--ink-soft);font-size:0.75rem;">Upload gambar ke ImgBB/PostIMG, atau pilih file di bawah untuk upload langsung.</small>
+          </div>
+          <!-- Direct upload file input -->
+          <div class="field full">
+            <label for="fFotoUsahaFile">Upload Foto Usaha (max 800px, JPEG 80%)</label>
+            <input type="file" id="fFotoUsahaFile" accept="image/*" />
+            <div id="fFotoUsahaPreview" style="margin-top:8px;"></div>
+          </div>
+
+          <!-- ============================================================
+               FIELD FOTO PRODUK
+               Foto produk atau jasa yang ditawarkan (opsional).
+               ============================================================ -->
+          <div class="field full">
+            <label for="fFotoProduk">Foto Produk (URL gambar)</label>
+            <input type="url" id="fFotoProduk" placeholder="https://i.ibb.co/xxx/foto-produk.jpg (opsional)" />
+            <small style="color:var(--ink-soft);font-size:0.75rem;">Foto produk/jasa, atau pilih file di bawah.</small>
+          </div>
+          <div class="field full">
+            <label for="fFotoProdukFile">Upload Foto Produk (max 800px, JPEG 80%)</label>
+            <input type="file" id="fFotoProdukFile" accept="image/*" />
+            <div id="fFotoProdukPreview" style="margin-top:8px;"></div>
+          </div>
+
+          <!-- ============================================================
+               FIELD KOORDINAT GPS
+               Untuk pin lokasi yang presisi di Google Maps.
+               Format: latitude dan longitude (contoh: -7.1234, 110.5678).
+               Jika kosong, link Maps tetap pakai mapsQuery sebagai fallback.
+               ============================================================ -->
+          <div class="field">
+            <label for="fLatitude">Latitude (GPS)</label>
+            <input type="text" id="fLatitude" placeholder="-7.1234 (opsional)" />
+          </div>
+
+          <div class="field">
+            <label for="fLongitude">Longitude (GPS)</label>
+            <input type="text" id="fLongitude" placeholder="110.5678 (opsional)" />
+          </div>
+
+          <div class="field full checkbox-field">
+            <input type="checkbox" id="fBuka" checked />
+            <label for="fBuka" style="margin:0;">Usaha sedang buka</label>
+          </div>
+        </div>
+
+        <div class="form-footer">
+          <button type="button" class="btn btn-outline btn-sm" id="umkmCancelBtn">Batal</button>
+          <button type="submit" class="btn btn-solid-leaf btn-sm">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FORM MODAL: KELOLA KATEGORI ============ -->
+<div class="modal-backdrop form-modal" id="catModalBackdrop">
+  <div class="modal">
+    <div class="modal-body">
+      <h2>Kelola Kategori</h2>
+      <p style="font-size:0.85rem;color:var(--ink-soft);">
+        Ubah nama/ikon kategori, atau tambah kategori baru. Menghapus kategori
+        tidak menghapus UMKM yang memakainya — UMKM tersebut perlu dipindah
+        kategori secara manual.
+      </p>
+      <div class="category-manager" id="categoryManagerList"></div>
+      <div class="form-footer" style="justify-content: space-between;">
+        <button type="button" class="btn btn-outline btn-sm" id="addCategoryBtn">+ Kategori baru</button>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="btn btn-outline btn-sm" id="catCancelBtn">Tutup</button>
+          <button type="button" class="btn btn-solid-leaf btn-sm" id="catSaveBtn">Simpan Kategori</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     FORM MODAL: PENGATURAN DATABASE
+     Admin bisa memilih mode penyimpanan data:
+     1. localStorage  → data disimpan di browser (default, untuk testing)
+     2. Supabase      → data disimpan di cloud PostgreSQL (untuk produksi)
+
+     Jika memilih Supabase, admin perlu mengisi:
+     - Supabase URL   (dari dashboard Supabase > Settings > API)
+     - Anon Key       (dari dashboard Supabase > Settings > API)
+
+     Cara setup Supabase ada di file README.md.
+     ============================================================ -->
+<div class="modal-backdrop form-modal" id="dbModalBackdrop">
+  <div class="modal">
+    <div class="modal-body">
+      <h2>⚙️ Pengaturan Database</h2>
+      <p style="font-size:0.85rem;color:var(--ink-soft);">
+        Pilih di mana data UMKM disimpan. <strong>localStorage</strong> hanya
+        tersimpan di browser ini. <strong>Supabase</strong> menyimpan di cloud
+        sehingga bisa diakses dari semua perangkat.
+      </p>
+
+      <div class="form-grid" style="margin-top:16px;">
+        <div class="field full">
+          <label>Mode Penyimpanan</label>
+          <div class="db-mode-options">
+            <label class="db-radio">
+              <input type="radio" name="dbMode" value="local" checked />
+              <span>💾 localStorage <small>(browser saja)</small></span>
+            </label>
+            <label class="db-radio">
+              <input type="radio" name="dbMode" value="supabase" />
+              <span>☁️ Supabase <small>(cloud / produksi)</small></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field full" id="supabaseFields" style="display:none;">
+          <label for="supabaseUrl">Supabase URL</label>
+          <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co" />
+        </div>
+        <div class="field full" id="supabaseKeyField" style="display:none;">
+          <label for="supabaseKey">Supabase Anon Key</label>
+          <input type="text" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." />
+        </div>
+      </div>
+
+      <div class="form-footer" style="justify-content: space-between;">
+        <button type="button" class="btn btn-outline btn-sm" id="dbTestBtn">🔌 Tes Koneksi</button>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="btn btn-outline btn-sm" id="dbCancelBtn">Batal</button>
+          <button type="button" class="btn btn-solid-leaf btn-sm" id="dbSaveBtn">Simpan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     FORM MODAL: PENGATURAN BANNER WEBSITE
+     Admin bisa mengatur gambar banner yang tampil di halaman publik.
+     - URL gambar: upload ke hosting gratis lalu paste URL
+     - Aktif/nonaktif: toggle untuk menampilkan gambar atau SVG default
+     ============================================================ -->
+<div class="modal-backdrop form-modal" id="bannerModalBackdrop">
+  <div class="modal">
+    <div class="modal-body">
+      <h2>🖼️ Pengaturan Banner</h2>
+      <p style="font-size:0.85rem;color:var(--ink-soft);">
+        Atur gambar banner yang tampil di halaman utama website.
+        Upload gambar ke hosting gratis (ImgBB, PostIMG), lalu paste URL-nya di sini.
+      </p>
+
+      <div class="form-grid" style="margin-top:16px;">
+        <div class="field full">
+          <label for="bannerUrl">URL Gambar Banner</label>
+          <input type="url" id="bannerUrl" placeholder="https://i.ibb.co/xxx/banner.jpg" />
+          <small style="color:var(--ink-soft);font-size:0.75rem;">Rekomendasi ukuran: 1200x400px format landscape.</small>
+        </div>
+        <div class="field full checkbox-field">
+          <input type="checkbox" id="bannerAktif" />
+          <label for="bannerAktif" style="margin:0;">Tampilkan gambar banner (jika tidak dicentang, pakai SVG default)</label>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button type="button" class="btn btn-outline btn-sm" id="bannerCancelBtn">Batal</button>
+        <button type="button" class="btn btn-solid-leaf btn-sm" id="bannerSaveBtn">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     FORM MODAL: PENGATURAN TEKS WEBSITE
+     Admin bisa mengedit semua teks yang tampil di halaman publik:
+     - Hero (eyebrow, title, description, search placeholder, stats)
+     - Kategori & Katalog heading
+     - About (eyebrow, title, description, 3 points, admin note)
+     - Footer text
+     ============================================================ -->
+<div class="modal-backdrop form-modal" id="textModalBackdrop">
+  <div class="modal">
+    <div class="modal-body">
+      <h2>📝 Teks Website</h2>
+      <p style="font-size:0.85rem;color:var(--ink-soft);">
+        Edit teks yang tampil di halaman publik. Klik Simpan untuk menerapkan.
+      </p>
+
+      <div class="form-grid" style="margin-top:16px;">
+        <div class="field full">
+          <label for="tHeroEyebrow">Hero Eyebrow</label>
+          <input type="text" id="tHeroEyebrow" />
+        </div>
+        <div class="field full">
+          <label for="tHeroTitle">Hero Title</label>
+          <input type="text" id="tHeroTitle" />
+        </div>
+        <div class="field full">
+          <label for="tHeroDesc">Hero Description</label>
+          <textarea id="tHeroDesc" rows="3"></textarea>
+        </div>
+        <div class="field full">
+          <label for="tSearchPlaceholder">Search Placeholder</label>
+          <input type="text" id="tSearchPlaceholder" />
+        </div>
+        <div class="field">
+          <label for="tStat1">Stat 1 Label</label>
+          <input type="text" id="tStat1" />
+        </div>
+        <div class="field">
+          <label for="tStat2">Stat 2 Label</label>
+          <input type="text" id="tStat2" />
+        </div>
+        <div class="field full">
+          <label for="tStat3">Stat 3 Label</label>
+          <input type="text" id="tStat3" />
+        </div>
+        <div class="field full">
+          <label for="tKategoriHeading">Kategori Heading</label>
+          <input type="text" id="tKategoriHeading" />
+        </div>
+        <div class="field full">
+          <label for="tKatalogHeading">Katalog Heading</label>
+          <input type="text" id="tKatalogHeading" />
+        </div>
+        <div class="field full">
+          <label for="tAboutEyebrow">About Eyebrow</label>
+          <input type="text" id="tAboutEyebrow" />
+        </div>
+        <div class="field full">
+          <label for="tAboutTitle">About Title</label>
+          <input type="text" id="tAboutTitle" />
+        </div>
+        <div class="field full">
+          <label for="tAboutDesc">About Description</label>
+          <textarea id="tAboutDesc" rows="4"></textarea>
+        </div>
+        <div class="field">
+          <label for="tAboutPoint1Title">Point 1 Title</label>
+          <input type="text" id="tAboutPoint1Title" />
+        </div>
+        <div class="field">
+          <label for="tAboutPoint2Title">Point 2 Title</label>
+          <input type="text" id="tAboutPoint2Title" />
+        </div>
+        <div class="field full">
+          <label for="tAboutPoint1Desc">Point 1 Description</label>
+          <input type="text" id="tAboutPoint1Desc" />
+        </div>
+        <div class="field full">
+          <label for="tAboutPoint2Desc">Point 2 Description</label>
+          <input type="text" id="tAboutPoint2Desc" />
+        </div>
+        <div class="field">
+          <label for="tAboutPoint3Title">Point 3 Title</label>
+          <input type="text" id="tAboutPoint3Title" />
+        </div>
+        <div class="field full">
+          <label for="tAboutPoint3Desc">Point 3 Description</label>
+          <input type="text" id="tAboutPoint3Desc" />
+        </div>
+        <div class="field full">
+          <label for="tAdminNote">Admin Note</label>
+          <textarea id="tAdminNote" rows="2"></textarea>
+        </div>
+        <div class="field full">
+          <label for="tFooterText">Footer Text</label>
+          <input type="text" id="tFooterText" />
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button type="button" class="btn btn-outline btn-sm" id="textCancelBtn">Batal</button>
+        <button type="button" class="btn btn-solid-leaf btn-sm" id="textSaveBtn">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     FORM MODAL: PENGADUAN & SARAN
+     Admin bisa melihat dan mengelola pengaduan/saran dari pengunjung.
+     Data disimpan di localStorage.
+     ============================================================ -->
+<div class="modal-backdrop form-modal" id="pengaduanModalBackdrop">
+  <div class="modal">
+    <div class="modal-body">
+      <h2>📬 Pengaduan & Saran</h2>
+      <p style="font-size:0.85rem;color:var(--ink-soft);">
+        Daftar pesan dari pengunjung. Klik "Tandai Dibaca" untuk menandai pesan sudah dibaca.
+      </p>
+
+      <div class="pengaduan-admin-list" id="pengaduanAdminList" style="margin-top:16px; max-height:500px; overflow-y:auto;">
+        <!-- Daftar pengaduan akan di-render di sini -->
+      </div>
+
+      <div class="form-footer">
+        <button type="button" class="btn btn-outline btn-sm" id="pengaduanCloseBtn">Tutup</button>
+        <button type="button" class="btn btn-solid-leaf btn-sm" id="pengaduanRefreshBtn">🔄 Refresh</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOAST: notifikasi kecil di bawah layar ============ -->
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

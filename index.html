@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#1A8A7E" />
+<title>FEIFH Link — Katalog Digital UMKM Kampung Suaran</title>
+<meta name="description" content="FEIFH Link menghubungkan Anda dengan UMKM lokal Kampung Suaran: makanan, minuman, warung, dan jasa — lengkap dengan lokasi dan kontak WhatsApp." />
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ============ TOP NAV ============ -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="#top" class="brand">
+      <span class="brand-mark">FL</span>
+      FEIFH Link
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#top">Beranda</a>
+      <a href="#kategori">Kategori</a>
+      <a href="#katalog">Katalog UMKM</a>
+      <a href="#tentang">Tentang</a>
+      <a href="#pengaduan">Pengaduan</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Buka menu">☰</button>
+  </div>
+</header>
+
+<!-- ============ HERO (Illdy‑style jumbotron, centered) ============ -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-copy">
+      <span class="eyebrow" id="heroEyebrow"></span>
+      <h1 id="heroTitle"></h1>
+      <p class="hero-lede" id="heroDesc"></p>
+
+      <form class="search-card" id="searchForm" role="search">
+        <label for="searchInput" class="sr-only">Cari UMKM</label>
+        <input type="text" id="searchInput" autocomplete="off" />
+        <button type="submit">Cari</button>
+      </form>
+
+      <!-- Illdy‑style hero buttons -->
+      <div class="hero-buttons">
+        <a href="#tentang" class="btn btn-outline">Pelajari</a>
+        <a href="#katalog" class="btn btn-solid-marigold">Lihat Katalog</a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat"><b>10+</b><span id="stat1"></span></div>
+        <div class="hero-stat"><b>4</b><span id="stat2"></span></div>
+        <div class="hero-stat"><b>1</b><span id="stat3"></span></div>
+      </div>
+    </div>
+
+    <!-- route SVG art (hidden by default, shown when no banner image) -->
+    <div class="hero-art" aria-hidden="true">
+      <svg class="route-svg" viewBox="0 0 420 380" xmlns="http://www.w3.org/2000/svg">
+        <path d="M40 330 C 90 260, 40 200, 100 170 S 220 150, 210 90 S 320 60, 340 20"
+              fill="none" stroke="#40E0D0" stroke-width="3" stroke-linecap="round"
+              stroke-dasharray="2 14" />
+        <circle cx="40" cy="330" r="26" fill="#F2B705" />
+        <text x="40" y="336" text-anchor="middle" class="route-stop" font-size="18">🏪</text>
+        <circle cx="100" cy="170" r="26" fill="#E0F7F5" stroke="#40E0D0" stroke-width="2"/>
+        <text x="100" y="176" text-anchor="middle" class="route-stop" font-size="18">🍜</text>
+        <circle cx="210" cy="90" r="26" fill="#F2B705" />
+        <text x="210" y="96" text-anchor="middle" class="route-stop" font-size="18">🥤</text>
+        <circle cx="340" cy="20" r="26" fill="#E0F7F5" stroke="#40E0D0" stroke-width="2"/>
+        <text x="340" y="26" text-anchor="middle" class="route-stop" font-size="18">🔧</text>
+        <text x="40" y="368" text-anchor="middle" class="route-stop" fill="#5C6B57">Warung</text>
+        <text x="100" y="208" text-anchor="middle" class="route-stop" fill="#5C6B57">Makanan</text>
+        <text x="222" y="128" text-anchor="middle" class="route-stop" fill="#5C6B57">Minuman</text>
+        <text x="340" y="58" text-anchor="middle" class="route-stop" fill="#5C6B57">Jasa</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CATEGORIES (Illdy section header, centered) ============ -->
+<section class="categories" id="kategori">
+  <div class="wrap">
+    <div class="section-header">
+      <h3 id="kategoriHeading"></h3>
+    </div>
+    <div class="chip-row" id="chipRow"></div>
+  </div>
+</section>
+
+<!-- ============ LISTING (Illdy section header, centered) ============ -->
+<section class="listing" id="katalog">
+  <div class="wrap">
+    <div class="section-header">
+      <h3 id="katalogHeading"></h3>
+      <div class="section-description">Temukan usaha, lihat lokasi, dan hubungi langsung via WhatsApp.</div>
+      <span class="result-count" id="resultCount"></span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<!-- ============ ABOUT (Illdy section header, centered) ============ -->
+<section class="about" id="tentang">
+  <div class="wrap">
+    <div class="section-header">
+      <span class="eyebrow" id="aboutEyebrow"></span>
+      <h3 id="aboutTitle"></h3>
+      <div class="section-description" id="aboutDesc"></div>
+    </div>
+    <div class="about-inner">
+      <div>
+        <div class="admin-note" id="adminNote"></div>
+      </div>
+      <div class="about-points">
+        <div class="about-point">
+          <span class="num">01</span>
+          <div>
+            <h4 id="aboutPoint1Title"></h4>
+            <p id="aboutPoint1Desc"></p>
+          </div>
+        </div>
+        <div class="about-point">
+          <span class="num">02</span>
+          <div>
+            <h4 id="aboutPoint2Title"></h4>
+            <p id="aboutPoint2Desc"></p>
+          </div>
+        </div>
+        <div class="about-point">
+          <span class="num">03</span>
+          <div>
+            <h4 id="aboutPoint3Title"></h4>
+            <p id="aboutPoint3Desc"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PENGADUAN & SARAN (Illdy contact style) ============ -->
+<section class="pengaduan" id="pengaduan">
+  <div class="wrap">
+    <div class="section-header">
+      <span class="eyebrow">Kontak Kami</span>
+      <h3 id="pengaduanHeading">Pengaduan & Saran</h3>
+    </div>
+    <div class="pengaduan-inner">
+      <div class="pengaduan-info">
+        <p>Punya keluhan, saran, atau masukan untuk Kampung Suaran? Kirimkan pesan Anda di sini. Admin akan membalas secepatnya.</p>
+        <ul class="pengaduan-list">
+          <li><span class="ic">📱</span><span>WhatsApp Admin</span></li>
+          <li><span class="ic">⏰</span><span>Respon 1x24 jam</span></li>
+          <li><span class="ic">🔒</span><span>Data dilindungi</span></li>
+        </ul>
+      </div>
+      <form class="pengaduan-form" id="pengaduanForm">
+        <div class="field">
+          <label for="pNama">Nama Anda</label>
+          <input type="text" id="pNama" required placeholder="Nama lengkap" />
+        </div>
+        <div class="field">
+          <label for="pKontak">Kontak (WhatsApp/Email)</label>
+          <input type="text" id="pKontak" required placeholder="62812xxxxxxx atau email" />
+        </div>
+        <div class="field full">
+          <label for="pJenis">Jenis</label>
+          <select id="pJenis" required>
+            <option value="pengaduan">Pengaduan</option>
+            <option value="saran">Saran</option>
+            <option value="masukan">Masukan</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="pPesan">Pesan</label>
+          <textarea id="pPesan" rows="4" required placeholder="Tuliskan pengaduan atau saran Anda di sini..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-solid-leaf">Kirim Pesan</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER (Illdy multi‑column style) ============ -->
+<footer>
+  <div class="wrap footer-inner">
+    <div class="footer-brand"><span class="brand-mark" style="width:26px;height:26px;font-size:0.75rem;">FL</span> FEIFH Link</div>
+    <div>
+      <h5 style="color:#fff;margin:0 0 8px;">Katalog</h5>
+      <ul style="list-style:none;margin:0;padding:0;display:grid;gap:6px;">
+        <li><a href="#kategori">Kategori</a></li>
+        <li><a href="#katalog">Katalog UMKM</a></li>
+        <li><a href="#tentang">Tentang</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5 style="color:#fff;margin:0 0 8px;">Bantuan</h5>
+      <ul style="list-style:none;margin:0;padding:0;display:grid;gap:6px;">
+        <li><a href="#pengaduan">Pengaduan & Saran</a></li>
+        <li><a href="admin.html">Admin</a></li>
+      </ul>
+    </div>
+    <div style="font-size:0.85rem;"><span id="footerText"></span></div>
+  </div>
+</footer>
+
+<!-- ============ MODAL ============ -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modalContent" role="dialog" aria-modal="true"></div>
+</div>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

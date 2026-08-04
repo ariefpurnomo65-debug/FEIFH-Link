@@ -1,0 +1,53 @@
+# ============================================================
+# FEIFH Link — Konfigurasi Netlify
+# ------------------------------------------------------------
+# File ini berisi pengaturan untuk deploy ke Netlify.
+# Netlify akan membaca file ini secara otomatis saat deploy.
+#
+# CARA DEPLOY:
+# 1. Drag & drop folder ini ke https://app.netlify.com/drop
+#    (cara paling cepat, tanpa konfigurasi)
+#
+# ATAU
+#
+# 2. Hubungkan repository Git (GitHub/GitLab/Bitbucket) ke Netlify:
+#    - Buat site baru di Netlify
+#    - Pilih repository
+#    - Build command: (kosongkan — situs statis)
+#    - Publish directory: . (root folder)
+# ============================================================
+
+# Site settings
+[build]
+  # Tidak ada build step — situs ini 100% statis (HTML+CSS+JS)
+  command = ""
+  # Directory yang di-deploy adalah root folder
+  publish = "."
+
+# Headers keamanan
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Mencegah clickjacking
+    X-Frame-Options = "SAMEORIGIN"
+    # Mencegah MIME sniffing
+    X-Content-Type-Options = "nosniff"
+    # Referrer policy
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache untuk file statis (CSS, JS, gambar)
+[[headers]]
+  for = "/style.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "/data.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+# Redirect: pastikan admin.html bisa diakses tanpa .html
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
