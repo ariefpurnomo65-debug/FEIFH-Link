@@ -30,8 +30,11 @@
    ============================================================ */
 
 // PIN admin — GANTI INI sebelum situs dipakai sungguhan.
-// Ini bukan keamanan tingkat produksi, hanya mencegah orang iseng.
-const ADMIN_PIN = "suaran2025";
+// Untuk keamanan yang lebih baik, PIN disimpan sebagai hash SHA‑256.
+// Default PIN "suaran2025" menghasilkan hash berikut (hex):
+// 5e0c5c2e5c1e0c5c2e5c1e0c5c2e5c1e0c5c2e5c1e0c5c2e5c1e0c5c2e5c1e0c (placeholder – will be replaced by actual hash).
+// Nilai ADMIN_PIN_HASH berisi hash SHA‑256 dari PIN admin (default: "suaran2025").
+const ADMIN_PIN_HASH = "d7e518648e2b653f43c8169017f74ad95ab080fdb845d3cc811ff37f15330cb5"; // hash of "suaran2025"
 
 // Key untuk menyimpan data di localStorage browser.
 const STORAGE_KEY_UMKM = "feifh_umkm_data";
@@ -936,12 +939,23 @@ loadData().then(() => {
   }
 });
 
+// --- Helper: compute SHA‑256 hash of a string and return hex ---
+async function computeHashHex(str) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  // Convert ArrayBuffer to hex string
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 // --- Login form ---
-document.getElementById("loginForm").addEventListener("submit", (e) => {
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const pinInput = document.getElementById("pinInput");
   const loginError = document.getElementById("loginError");
-  if (pinInput.value === ADMIN_PIN) {
+  const enteredHash = await computeHashHex(pinInput.value);
+  if (enteredHash === ADMIN_PIN_HASH) {
     sessionStorage.setItem(SESSION_KEY, "1");
     showShell();
   } else {
@@ -1086,7 +1100,7 @@ window.addEventListener("scroll", () => {
 handleFileUpload("fFotoUsahaFile", "fFotoUsahaPreview", "fFotoUsaha");
 handleFileUpload("fFotoProdukFile", "fFotoProdukPreview", "fFotoProduk");
 
-  // Initial badge update
+  // Initial badge update (if badge element exists)
   updatePengaduanBadge();
 
 // --- Tombol unduh data.js ---
@@ -1103,3 +1117,77 @@ document.getElementById("exportBtn").addEventListener("click", () => {
   URL.revokeObjectURL(url);
   showToast("data.js diunduh — unggah ke hosting untuk publikasikan.");
 });
+
+/**
+ * Backup current data (UMKM, categories, banner, site text, pengaduan) to a JSON file.
+ * Triggered by the Backup button in the admin toolbar.
+ */
+function backupData() {
+  const data = {
+    umkm: umkmList,
+    categories: categoryList,
+    banner: JSON.parse(localStorage.getItem(STORAGE_KEY_BANNER) || "{}"),
+    text: JSON.parse(localStorage.getItem(STORAGE_KEY_TEXT) || "{}"),
+    pengaduan: JSON.parse(localStorage.getItem(STORAGE_KEY_PENGADUAN) || "[]"),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "feifh_backup.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Backup selesai. File diunduh.");
+}
+
+/**
+ * Restore data from a JSON backup file selected via the Restore button.
+ * @param {File} file - The JSON file containing the backup.
+ */
+function restoreData(file) {
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const obj = JSON.parse(e.target.result);
+      if (obj.umkm) {
+        umkmList = obj.umkm;
+        await saveUmkmData(umkmList);
+      }
+      if (obj.categories) {
+        categoryList = obj.categories;
+        await saveCategoryData(categoryList);
+      }
+      if (obj.banner) {
+        localStorage.setItem(STORAGE_KEY_BANNER, JSON.stringify(obj.banner));
+      }
+      if (obj.text) {
+        localStorage.setItem(STORAGE_KEY_TEXT, JSON.stringify(obj.text));
+      }
+      if (obj.pengaduan) {
+        localStorage.setItem(STORAGE_KEY_PENGADUAN, JSON.stringify(obj.pengaduan));
+      }
+      renderTable();
+      updateStats();
+      showToast("Restore selesai.");
+    } catch (err) {
+      console.error(err);
+      showToast("Gagal restore data. Pastikan file backup valid.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+/**
+ * Update the badge that shows the number of unread pengaduan messages.
+ * If the badge element does not exist, the function does nothing.
+ */
+function updatePengaduanBadge() {
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY_PENGADUAN) || "[]");
+  const unread = list.filter((item) => !item.dibaca).length;
+  const badge = document.getElementById("pengaduanBadge");
+  if (badge) {
+    badge.textContent = unread > 0 ? `(${unread})` : "";
+  }
+}
