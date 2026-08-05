@@ -124,7 +124,8 @@
         <button class="btn btn-sm btn-outline" id="backupBtn">💾 Backup Data</button>
         <button class="btn btn-sm btn-outline" id="restoreBtn">📂 Restore Data</button>
   <!-- New Sync to Supabase button -->
-  <button class="btn btn-sm btn-solid-leaf" id="syncSupabaseBtn">☁️ Sync ke Supabase</button>
+  <!-- Sync button now uses inline onclick for reliability -->
+  <button class="btn btn-sm btn-solid-leaf" id="syncSupabaseBtn" onclick="syncToSupabase(this)">☁️ Sync ke Supabase</button>
         <input type="file" id="restoreInput" accept="application/json" style="display:none;" />
         </div>
       </div>
