@@ -219,9 +219,22 @@ async function saveCategoryData(list) {
         console.log("Inserted categories rows:", data);
       }
     } catch (e) {
-      console.error("Gagal menyimpan kategori ke Supabase:", e);
-      const msg = e.message ? `Gagal menyimpan kategori ke Supabase: ${e.message}` : `Gagal menyimpan kategori ke Supabase: ${JSON.stringify(e)}`;
-      showToast(msg);
+      // Log full Supabase error details for debugging
+      console.error(
+        "Gagal menyimpan kategori ke Supabase:",
+        e,
+        e.message,
+        e.details,
+        e.hint,
+        JSON.stringify(e, null, 2)
+      );
+      // Specific handling for RLS errors on categories
+      if (e.code === "42501") {
+        showToast("RLS aktif pada tabel categories – nonaktifkan RLS atau buat policy INSERT di Supabase Dashboard.");
+      } else {
+        const msg = e.message ? `Gagal menyimpan kategori ke Supabase: ${e.message}` : `Gagal menyimpan kategori ke Supabase: ${JSON.stringify(e)}`;
+        showToast(msg);
+      }
       return false;
     }
   } else {
