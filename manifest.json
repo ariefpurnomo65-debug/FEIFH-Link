@@ -8,9 +8,10 @@
   "theme_color": "#1A8A7E",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231A8A7E'/><text x='50' y='65' font-size='50' font-weight='bold' fill='%23F2B705' text-anchor='middle'>FL</text></svg>",
+      "src": "logo.svg",
       "sizes": "192x192 512x512",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
