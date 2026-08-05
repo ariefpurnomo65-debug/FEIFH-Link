@@ -154,38 +154,36 @@ async function saveUmkmData(list) {
       // Hapus semua data lama, lalu insert data baru
       await supabaseClient.from("umkm").delete().neq("id", 0);
       if (list.length > 0) {
-        // Supabase table may use snake_case column names.
-        // Define a mapping from our camelCase keys to the expected snake_case columns.
-        const fieldMap = {
-          id: "id",
-          nama: "nama",
-          kategori: "kategori",
-          icon: "icon",
-          deskripsi: "deskripsi",
-          alamat: "alamat",
-          jam: "jam",
-          whatsapp: "whatsapp",
-          mapsQuery: "maps_query",
-          buka: "buka",
-          // Optional fields (if they exist in the Supabase table)
-          fotoUsaha: "foto_usaha",
-          fotoProduk: "foto_produk",
-          latitude: "latitude",
-          longitude: "longitude"
-        };
-
-        // Build a new array where each record only contains keys that exist in the mapping.
-        const filtered = list.map((rec) => {
+        // The Supabase table uses the same camelCase column names as our data objects.
+        // We can therefore insert the list directly, but we still filter out any undefined fields
+        // to avoid sending nulls for optional columns that may not exist.
+        const cleaned = list.map((rec) => {
           const obj = {};
-          Object.keys(fieldMap).forEach((srcKey) => {
-            if (rec.hasOwnProperty(srcKey) && rec[srcKey] !== undefined) {
-              obj[fieldMap[srcKey]] = rec[srcKey];
+          // Explicitly copy only the fields defined in the schema
+          [
+            "id",
+            "nama",
+            "kategori",
+            "icon",
+            "deskripsi",
+            "alamat",
+            "jam",
+            "whatsapp",
+            "mapsQuery",
+            "fotoUsaha",
+            "fotoProduk",
+            "latitude",
+            "longitude",
+            "buka"
+          ].forEach((key) => {
+            if (rec[key] !== undefined) {
+              obj[key] = rec[key];
             }
           });
           return obj;
         });
 
-        const { error, data } = await supabaseClient.from("umkm").insert(filtered);
+        const { error, data } = await supabaseClient.from("umkm").insert(cleaned);
         if (error) throw error;
         console.log("Inserted UMKM rows:", data);
       }
