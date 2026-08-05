@@ -754,7 +754,8 @@ function closeTextSettings() {
 }
 
 /* --- Simpan pengaturan teks --- */
-function saveTextSettings() {
+// Updated to also sync site text to Supabase when in that mode
+async function saveTextSettings() {
   const text = {
     heroEyebrow: document.getElementById("tHeroEyebrow").value.trim(),
     heroTitle: document.getElementById("tHeroTitle").value.trim(),
@@ -778,11 +779,22 @@ function saveTextSettings() {
     footerText: document.getElementById("tFooterText").value.trim(),
   };
 
-  // Simpan ke localStorage
+  // Simpan ke localStorage (fallback for the public page)
   localStorage.setItem(STORAGE_KEY_TEXT, JSON.stringify(text));
 
+  // Jika mode Supabase aktif, sinkronkan ke tabel app_settings
+  if (dbMode === "supabase" && supabaseClient) {
+    try {
+      await supabaseClient.from("app_settings").upsert({ key: "site_text", value: text });
+    } catch (e) {
+      console.error("Failed to sync site text to Supabase:", e);
+      showToast("Gagal menyimpan teks ke Supabase, tetap disimpan lokal.");
+    }
+  }
+
   closeTextSettings();
-  showToast("Teks website berhasil diperbarui.");
+  // Inform admin that the public page needs a refresh to reflect changes
+  showToast("Teks website berhasil diperbarui. Refresh halaman publik untuk melihat perubahan.");
 }
 
 
@@ -1305,6 +1317,58 @@ function backupData() {
   showToast("Backup selesai. File diunduh.");
 }
 
+/* -----------------------------------------------------------
+   SAVE APP SETTINGS (site text & banner) to Supabase
+   ----------------------------------------------------------- */
+async function saveAppSettings() {
+  if (dbMode !== "supabase" || !supabaseClient) return true;
+  try {
+    const text = JSON.parse(localStorage.getItem(STORAGE_KEY_TEXT) || "{}");
+    const banner = JSON.parse(localStorage.getItem(STORAGE_KEY_BANNER) || "{}");
+    await supabaseClient.from("app_settings").upsert({ key: "site_text", value: text });
+    await supabaseClient.from("app_settings").upsert({ key: "banner", value: banner });
+    return true;
+  } catch (e) {
+    console.error("Failed to save app settings to Supabase:", e);
+    showToast("Gagal menyimpan pengaturan situs ke Supabase.");
+    return false;
+  }
+}
+
+/* -----------------------------------------------------------
+   SYNC TO SUPABASE – manual push of current data
+   ----------------------------------------------------------- */
+async function syncToSupabase(btn) {
+  if (!supabaseClient) {
+    showToast("Supabase belum terhubung. Atur dulu di Pengaturan Database.");
+    return;
+  }
+  const originalText = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "⏳ Sync...";
+  }
+  showToast("Menyinkronkan data ke Supabase…");
+  try {
+    const umkmOk = await saveUmkmData(umkmList);
+    const catOk = await saveCategoryData(categoryList);
+    const settingsOk = await saveAppSettings();
+    if (umkmOk && catOk && settingsOk) {
+      showToast("Sinkronisasi ke Supabase berhasil.");
+    } else {
+      showToast("Sinkronisasi ke Supabase gagal — lihat console.");
+    }
+  } catch (e) {
+    console.error("Sync to Supabase error:", e);
+    showToast("Sinkronisasi ke Supabase error.");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+}
+
 /**
  * Restore data from a JSON backup file selected via the Restore button.
  * @param {File} file - The JSON file containing the backup.
@@ -1324,9 +1388,24 @@ function restoreData(file) {
       }
       if (obj.banner) {
         localStorage.setItem(STORAGE_KEY_BANNER, JSON.stringify(obj.banner));
+        // Also sync to Supabase if in that mode
+        if (dbMode === "supabase" && supabaseClient) {
+          try {
+            await supabaseClient.from("app_settings").upsert({ key: "banner", value: obj.banner });
+          } catch (e) {
+            console.error("Failed to sync banner to Supabase during restore:", e);
+          }
+        }
       }
       if (obj.text) {
         localStorage.setItem(STORAGE_KEY_TEXT, JSON.stringify(obj.text));
+        if (dbMode === "supabase" && supabaseClient) {
+          try {
+            await supabaseClient.from("app_settings").upsert({ key: "site_text", value: obj.text });
+          } catch (e) {
+            console.error("Failed to sync site text to Supabase during restore:", e);
+          }
+        }
       }
       if (obj.pengaduan) {
         localStorage.setItem(STORAGE_KEY_PENGADUAN, JSON.stringify(obj.pengaduan));
