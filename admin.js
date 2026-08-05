@@ -154,30 +154,31 @@ async function saveUmkmData(list) {
       // Hapus semua data lama, lalu insert data baru
       await supabaseClient.from("umkm").delete().neq("id", 0);
       if (list.length > 0) {
-        // The Supabase table uses the same camelCase column names as our data objects.
-        // We can therefore insert the list directly, but we still filter out any undefined fields
-        // to avoid sending nulls for optional columns that may not exist.
+        // PostgreSQL folds unquoted identifiers to lower‑case.
+        // The table was created without quoted identifiers, so the actual column names are all lower‑case.
+        // We therefore need to map our camelCase keys to lower‑case column names.
+        const fieldMap = {
+          id: "id",
+          nama: "nama",
+          kategori: "kategori",
+          icon: "icon",
+          deskripsi: "deskripsi",
+          alamat: "alamat",
+          jam: "jam",
+          whatsapp: "whatsapp",
+          mapsQuery: "mapsquery",
+          fotoUsaha: "fotousaha",
+          fotoProduk: "fotoproduk",
+          latitude: "latitude",
+          longitude: "longitude",
+          buka: "buka"
+        };
+
         const cleaned = list.map((rec) => {
           const obj = {};
-          // Explicitly copy only the fields defined in the schema
-          [
-            "id",
-            "nama",
-            "kategori",
-            "icon",
-            "deskripsi",
-            "alamat",
-            "jam",
-            "whatsapp",
-            "mapsQuery",
-            "fotoUsaha",
-            "fotoProduk",
-            "latitude",
-            "longitude",
-            "buka"
-          ].forEach((key) => {
-            if (rec[key] !== undefined) {
-              obj[key] = rec[key];
+          Object.keys(fieldMap).forEach((srcKey) => {
+            if (rec[srcKey] !== undefined) {
+              obj[fieldMap[srcKey]] = rec[srcKey];
             }
           });
           return obj;
