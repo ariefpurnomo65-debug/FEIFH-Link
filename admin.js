@@ -154,7 +154,9 @@ async function saveUmkmData(list) {
       }
     } catch (e) {
       console.error("Gagal menyimpan UMKM ke Supabase:", e);
-      showToast("Gagal menyimpan ke Supabase.");
+      // Show detailed error message to admin
+      const msg = e.message ? `Gagal menyimpan ke Supabase: ${e.message}` : "Gagal menyimpan ke Supabase.";
+      showToast(msg);
       return false;
     }
   } else {
@@ -181,7 +183,8 @@ async function saveCategoryData(list) {
       }
     } catch (e) {
       console.error("Gagal menyimpan kategori ke Supabase:", e);
-      showToast("Gagal menyimpan kategori ke Supabase.");
+      const msg = e.message ? `Gagal menyimpan kategori ke Supabase: ${e.message}` : "Gagal menyimpan kategori ke Supabase.";
+      showToast(msg);
       return false;
     }
   } else {
