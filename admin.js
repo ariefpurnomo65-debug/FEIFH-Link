@@ -154,27 +154,37 @@ async function saveUmkmData(list) {
       // Hapus semua data lama, lalu insert data baru
       await supabaseClient.from("umkm").delete().neq("id", 0);
       if (list.length > 0) {
-        // Supabase table may not have all fields (e.g., fotoUsaha, fotoProduk, latitude, longitude).
-        // Filter each record to only include columns that exist in the table.
-        const allowedFields = [
-          "id",
-          "nama",
-          "kategori",
-          "icon",
-          "deskripsi",
-          "alamat",
-          "jam",
-          "whatsapp",
-          "mapsQuery",
-          "buka"
-        ];
+        // Supabase table may use snake_case column names.
+        // Define a mapping from our camelCase keys to the expected snake_case columns.
+        const fieldMap = {
+          id: "id",
+          nama: "nama",
+          kategori: "kategori",
+          icon: "icon",
+          deskripsi: "deskripsi",
+          alamat: "alamat",
+          jam: "jam",
+          whatsapp: "whatsapp",
+          mapsQuery: "maps_query",
+          buka: "buka",
+          // Optional fields (if they exist in the Supabase table)
+          fotoUsaha: "foto_usaha",
+          fotoProduk: "foto_produk",
+          latitude: "latitude",
+          longitude: "longitude"
+        };
+
+        // Build a new array where each record only contains keys that exist in the mapping.
         const filtered = list.map((rec) => {
           const obj = {};
-          allowedFields.forEach((key) => {
-            if (rec.hasOwnProperty(key)) obj[key] = rec[key];
+          Object.keys(fieldMap).forEach((srcKey) => {
+            if (rec.hasOwnProperty(srcKey) && rec[srcKey] !== undefined) {
+              obj[fieldMap[srcKey]] = rec[srcKey];
+            }
           });
           return obj;
         });
+
         const { error, data } = await supabaseClient.from("umkm").insert(filtered);
         if (error) throw error;
         console.log("Inserted UMKM rows:", data);
