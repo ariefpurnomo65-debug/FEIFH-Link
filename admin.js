@@ -154,7 +154,28 @@ async function saveUmkmData(list) {
       // Hapus semua data lama, lalu insert data baru
       await supabaseClient.from("umkm").delete().neq("id", 0);
       if (list.length > 0) {
-        const { error, data } = await supabaseClient.from("umkm").insert(list);
+        // Supabase table may not have all fields (e.g., fotoUsaha, fotoProduk, latitude, longitude).
+        // Filter each record to only include columns that exist in the table.
+        const allowedFields = [
+          "id",
+          "nama",
+          "kategori",
+          "icon",
+          "deskripsi",
+          "alamat",
+          "jam",
+          "whatsapp",
+          "mapsQuery",
+          "buka"
+        ];
+        const filtered = list.map((rec) => {
+          const obj = {};
+          allowedFields.forEach((key) => {
+            if (rec.hasOwnProperty(key)) obj[key] = rec[key];
+          });
+          return obj;
+        });
+        const { error, data } = await supabaseClient.from("umkm").insert(filtered);
         if (error) throw error;
         console.log("Inserted UMKM rows:", data);
       }
