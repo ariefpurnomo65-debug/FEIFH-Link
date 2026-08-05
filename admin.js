@@ -104,6 +104,11 @@ function initSupabase(url, anonKey) {
     console.error("Library Supabase belum dimuat. Pastikan script CDN ada di admin.html.");
     return false;
   }
+  // Reuse existing client if already initialized to avoid duplicate GoTrueClient instances
+  if (supabaseClient) {
+    console.warn("Supabase client already initialized, reusing existing instance.");
+    return true;
+  }
   try {
     supabaseClient = window.supabase.createClient(url, anonKey);
     return true;
@@ -149,13 +154,14 @@ async function saveUmkmData(list) {
       // Hapus semua data lama, lalu insert data baru
       await supabaseClient.from("umkm").delete().neq("id", 0);
       if (list.length > 0) {
-        const { error } = await supabaseClient.from("umkm").insert(list);
+        const { error, data } = await supabaseClient.from("umkm").insert(list);
         if (error) throw error;
+        console.log("Inserted UMKM rows:", data);
       }
     } catch (e) {
       console.error("Gagal menyimpan UMKM ke Supabase:", e);
-      // Show detailed error message to admin
-      const msg = e.message ? `Gagal menyimpan ke Supabase: ${e.message}` : "Gagal menyimpan ke Supabase.";
+      // Show detailed error information (including full error object)
+      const msg = e.message ? `Gagal menyimpan ke Supabase: ${e.message}` : `Gagal menyimpan ke Supabase: ${JSON.stringify(e)}`;
       showToast(msg);
       return false;
     }
@@ -178,12 +184,13 @@ async function saveCategoryData(list) {
     try {
       await supabaseClient.from("categories").delete().neq("id", "");
       if (list.length > 0) {
-        const { error } = await supabaseClient.from("categories").insert(list);
+        const { error, data } = await supabaseClient.from("categories").insert(list);
         if (error) throw error;
+        console.log("Inserted categories rows:", data);
       }
     } catch (e) {
       console.error("Gagal menyimpan kategori ke Supabase:", e);
-      const msg = e.message ? `Gagal menyimpan kategori ke Supabase: ${e.message}` : "Gagal menyimpan kategori ke Supabase.";
+      const msg = e.message ? `Gagal menyimpan kategori ke Supabase: ${e.message}` : `Gagal menyimpan kategori ke Supabase: ${JSON.stringify(e)}`;
       showToast(msg);
       return false;
     }
@@ -568,6 +575,8 @@ async function saveDbSettings() {
   dbMode = mode;
   if (mode === "supabase") {
     initSupabase(url, key);
+    // Auto‑push existing local data to Supabase after switching mode
+    await pushLocalDataToSupabase();
   } else {
     supabaseClient = null;
   }
