@@ -86,15 +86,28 @@ let supabaseClient = null;
 function loadDbSettings() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY_DB_SETTINGS);
+    console.log("[loadDbSettings] raw saved value:", saved);
     if (saved) {
       const settings = JSON.parse(saved);
+      console.log("[loadDbSettings] parsed settings:", settings);
       dbMode = settings.mode || "local";
       if (dbMode === "supabase" && settings.url && settings.key) {
-        initSupabase(settings.url, settings.key);
+        const ok = initSupabase(settings.url, settings.key);
+        console.log("[loadDbSettings] initSupabase result:", ok);
+        if (ok) {
+          showToast("Supabase terhubung (mode Supabase).", 3000);
+          // Immediately test the connection to surface any auth or table issues
+          testSupabaseConnection();
+        } else {
+          showToast("Gagal inisialisasi Supabase. Periksa URL/Key.");
+        }
+      } else {
+        console.log("[loadDbSettings] mode not supabase or missing credentials");
       }
     }
   } catch (e) {
     console.warn("Gagal memuat pengaturan database:", e);
+    showToast("Error memuat pengaturan database: " + e.message);
   }
 }
 
