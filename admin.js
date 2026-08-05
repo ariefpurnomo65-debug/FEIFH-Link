@@ -43,6 +43,7 @@ const STORAGE_KEY_CATEGORIES = "feifh_categories";
 const STORAGE_KEY_DB_SETTINGS = "feifh_db_settings"; // mode database + kredensial Supabase
 const STORAGE_KEY_BANNER = "feifh_banner"; // pengaturan banner website
 const STORAGE_KEY_TEXT = "feifh_site_text"; // teks website yang bisa diedit
+const STORAGE_KEY_PENGADUAN = "feifh_pengaduan"; // data pengaduan/saran
 const SESSION_KEY = "feifh_admin_session"; // key session login
 
 // -------------------------------------------------------------------
