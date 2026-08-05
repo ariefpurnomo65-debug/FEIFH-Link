@@ -591,6 +591,37 @@ async function saveDbSettings() {
   showToast(mode === "supabase" ? "Mode Supabase aktif." : "Mode localStorage aktif.");
 }
 
+/* -----------------------------------------------------------
+   PUSH LOCAL DATA TO SUPABASE
+   -----------------------------------------------------------
+   After switching to Supabase mode we want to make sure any
+   existing data stored locally (in localStorage) is uploaded to
+   the Supabase tables. This function is called from
+   `saveDbSettings()` (line 579) and from the manual “Sync” button
+   in the UI (if added later). It reads the UMKM and category data
+   from localStorage, then uses the existing `saveUmkmData` and
+   `saveCategoryData` helpers to write them to Supabase.
+   Errors are reported via toast messages for the admin user.
+----------------------------------------------------------- */
+async function pushLocalDataToSupabase() {
+  if (!supabaseClient) {
+    showToast("Koneksi Supabase belum dibuat.");
+    return;
+  }
+  try {
+    const savedUmkm = localStorage.getItem(STORAGE_KEY_UMKM);
+    const savedCats = localStorage.getItem(STORAGE_KEY_CATEGORIES);
+    const umkm = savedUmkm ? JSON.parse(savedUmkm) : [];
+    const cats = savedCats ? JSON.parse(savedCats) : [];
+    // Use existing helper functions to persist data
+    await saveUmkmData(umkm);
+    await saveCategoryData(cats);
+    showToast("Data lokal berhasil dipush ke Supabase.");
+  } catch (e) {
+    console.error("Gagal push data lokal ke Supabase:", e);
+    showToast("Gagal push data lokal ke Supabase.");
+  }
+}
 
 /* ============================================================
    BAGIAN 10: PENGATURAN BANNER — Atur Gambar Banner Website
